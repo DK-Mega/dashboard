@@ -1,27 +1,79 @@
-# Dashboard
+# Create a WebPack Module Federation Angular
+- Crie uma aplicação angular que será o microfrontend
+  
+```
+$ ng new mfe1
+```
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.2.7.
+- Adicione o modulo federation
 
-## Development server
+```
+$ cd ./mfe1
+$ ng add @angular-architects/module-federation
+? Project name (press enter for default project) 
+    mfe1
+? Port to use
+    3000 (Cada microfrontend precisa ter uma porta diferente de para testes locais)
+```
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+- Criamos o módulo a ser utilizado na aplicação e depois importamos no AppModule
+  
+```
+$ ng g m projects/main
+$ ng g c projects/main
+```
 
-## Code scaffolding
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-## Build
+- Dentro do webpack.config.js devemos setar qual módulo iremos realizar o roteamento.
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```
+** mfe1/webpack.config.js
+new ModuleFederationPlugin({
+        library: { type: "module" },
 
-## Running unit tests
+        name: "mfe1",
+        filename: "remoteEntry.js",
+        exposes: {
+            './Module': './projects/mfe1/src/app/main/main.module.ts' // Aqui trocaremos a rota do appcomponent para o módulo MainModule que usaremos no microfrontend;
+            // É importante que este módulo esteja declarado no appmodule para funcionar
+        },
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+        shared: share({
+          "@angular/core": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
+          "@angular/common": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
+          "@angular/common/http": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
+          "@angular/router": { singleton: true, strictVersion: true, requiredVersion: 'auto' },
 
-## Running end-to-end tests
+          ...sharedMappings.getDescriptors()
+        })
+        
+    }),
+```
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+- Para finalizar, basta criarmos as rotas
+- Dentro do módulo main que criamos, importamos o RouterModule.forChild(MAIN_ROUTES)
 
-## Further help
+```
+** mfe1/src/app/main.module.ts
+@NgModule({
+  declarations: [
+    MainComponent
+  ],
+  imports: [
+    CommonModule,
+    RouterModule.forChild(MAIN_ROUTES)
+  ]
+})
+export class MainModule { }
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+E criamos um arquivo MAIN_ROUTES que declarará as rotas internas do microfrontend
+```
+import { Routes } from '@angular/router';
+import { MainComponent } from './main.component';
+
+export const MAIN_ROUTES: Routes = [
+    { path: '', component: MainComponent }
+];
+```
