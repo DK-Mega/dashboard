@@ -10,7 +10,7 @@ sharedMappings.register(
 
 module.exports = {
   output: {
-    uniqueName: "dashboard",
+    uniqueName: "form",
     publicPath: "auto"
   },
   optimization: {
@@ -29,7 +29,7 @@ module.exports = {
         library: { type: "module" },
 
         // For remotes (please adjust)
-        name: "dashboard",
+        name: "form",
         filename: "remoteEntry.js",
         exposes: {
             './Module': './src/app/projects/main/main.module.ts',
